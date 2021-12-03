@@ -6,4 +6,4 @@ Download the zip file and then use package manager [pip](https://pip.pypa.io/en/
 
 ``` py -m pip install requirements.txt ```
 
-Enter your MongoDb connection string [here](https://github.com/Rohit2892/Chat-website/blob/26ccb4f7ce0f93be7e373a50f2a01d4fb5654ed6/db.py#L6-L9) and run the app.py file.
+Enter your MongoDb connection string [here](https://github.com/Rohit2892/Chat-website/blob/3f9c0597ea7b8e3926415c5e4a4cf98c6dab2943/db.py#L8-L9) and run the app.py file.
