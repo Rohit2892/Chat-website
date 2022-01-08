@@ -226,7 +226,7 @@ button{
   function myFunction() {
   document.getElementById("myDropdown").classList.toggle("show");
 }
-var socket = io.connect();
+var socket = io.connect('https://chat-app28.herokuapp.com/');
 var user = '{{var}}'
 var curr_chat;
 socket.on('connect',function(){
