@@ -220,12 +220,140 @@ button{
   bottom: 0;
 }
 </style>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
 <script>
   function myFunction() {
   document.getElementById("myDropdown").classList.toggle("show");
 }
+var socket = io.connect();
+var user = '{{var}}'
+var curr_chat;
+socket.on('connect',function(){
+   var data = '{{ var }}';
+   socket.emit('init',data)
+})
+function change_chat(clicked) {
+  curr_chat=clicked;
+  socket.emit('change chat',{
+    'new_chat': clicked,
+    'user': user
+  });
+}
+$(window).keydown(function(event){
+    if(event.keyCode == 13) {
+      event.preventDefault();
+      sent();
+      return false;
+    }
+});
+function sent() {
+  var msg = document.getElementById("sendmsg").value;
+  if(msg.trim()){
+    socket.emit('sentmsg',{
+      'user':user, 'curr_chat':curr_chat,
+      'msg':msg
+    });
+  }
+  document.getElementById("sendmsg").value="";
+}
+function logout(){
+  socket.emit('logout',user);
+}
+socket.on('submit form',function(){
+  var form= document.getElementById("logout form");
+  form.submit();
+})
+window.onload = function(){
+socket.on('update chat',function(msg){
+  var chat = msg['chats'];
+  curr_chat=msg['current_chat'];
+  document.getElementById("chatbox").innerHTML = "";
+  document.getElementById("curr_chat").innerHTML = 
+  '<p class="txt mb-0 py-1">\
+    <i class="px-2 fas fa-user"></i>   '
+    +curr_chat+
+  '<\p>';
+    for(i in chat){
+    if(chat[i][0]==user){
+      document.getElementById("chatbox").innerHTML +=('beforeend',
+      '<div class="right media  ml-auto mb-3">\
+        <div class="media-body mr-4">\
+          <div class="reciever bg-light py-2 px-3 mb-2">\
+            <p class="chat-txt text-small mb-0 ">'
+              +chat[i][1]+
+            '</p>\
+          </div>\
+          <p class="chat-txt small text-muted text-right">'
+            +chat[i][2]+' | '+chat[i][3]+
+            '</p>\
+          </div>\
+        </div>');
+    }
+    else{
+      document.getElementById("chatbox").innerHTML +=('beforeend',
+      '<div class="left media mr-auto mb-3">\
+        <i class="icon1 fas fa-user"></i>\
+          <div class="media-body ml-3">\
+            <div class="sender py-2 px-3 mb-2">\
+              <p class="chat-txt text-small mb-0 text-white">'
+                +chat[i][1]+
+              '</p>\
+            </div>\
+            <p class="chat-txt small text-muted text-left">'
+            +chat[i][2]+' | '+chat[i][3]+
+            '</p>\
+          </div>\
+        </div>');
+    }
+  }
+  document.getElementById("msgbox").innerHTML =('beforeend',
+  '     <div class="message input-group" >\
+          <input id="sendmsg" type="text" autocomplete="off" name="sent-msg" placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-3 bg-light" required>\
+          <div class="input-group-append">\
+            <button id="button-addon2" name="sent-msg" type="button" onClick="sent()" class="button msg-button"> <i class="fa fa-paper-plane px-2"></i></button>\
+          </div>\
+        </div>');
+})
+socket.on('update allchats',function(msg){
+  document.getElementById("allchats").innerHTML="";
+  var chat = msg['user_chats'];
+  var curr_date = msg['date'];
+  var htmlfrag='<div class="list-group rounded-0">';
+  for(i in chat){
+    var d;
+    if (chat[i][3]==curr_date[0] && chat[i][4]==curr_date[1] && chat[i][5]==curr_date[2]){
+            d =chat[i][2];
+        }
+        else{
+            d= chat[i][3]+' '+chat[i][4]+' '+chat[i][5];
+        }
+    if (chat[i][1].length >=35 ){
+      chat[i][1]=chat[i][1].slice(0,35);
+    }
+       htmlfrag+='\
+            <button type="button" onClick="change_chat(this.value)"\
+            class=" chats px-4 py-2 light rounded-0" value='+chat[i][0]+ '>\
+              <div class="media"><i class="icon fas fa-user"></i>\
+                  <div class="media-body ml-4">\
+                    <div class="d-flex align-items-center justify-content-between mb-1">\
+                      <div style="width: 20%; float:left">\
+                        <h6 class="mb-0">'+chat[i][0]+'</h6>\
+                      </div>\
+                      <div style="width: 80%; float:right">\
+                        <small style="float:right;"class= " txt1 small">'+d+'</small>\
+                      </div>\
+                    </div>\
+                    <p class="txt2 mb-0 text-small">'+chat[i][1]+'</p>\
+                  </div>\
+              </div>\
+            </button>';
+    }
+    htmlfrag+='</div>';
+  document.getElementById("allchats").innerHTML+=htmlfrag;
+});
 
+}
 window.onclick = function(event) {
   if (!event.target.matches('.searchbox')) {
     var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -237,9 +365,6 @@ window.onclick = function(event) {
       }
     }
   }
-}
-if ( window.history.replaceState ) {
-  window.history.replaceState( null, null, '/chat/{{var}}' );
 }
 
 $(window).resize(function() {
@@ -274,29 +399,29 @@ function filterFunction() {
   <!-- Users box-->
   <div class="column1 col-4 px-1">
         <div class="search px-4 py-2">
-          <form method="post" action='/chat/{{var}}'>
+          <form id="logout form" method="post" action='/chat/{{var}}'>
             <i class="icon2 fas fa-search py-1 px-2"></i>
             <div class="dropdown">
    <input onclick="myFunction()" class='searchbox' type="text" placeholder="Search" id="myInput" onkeyup="filterFunction()"autocomplete="off">
   <div id="myDropdown" class="dropdown-content">
     {% for member in users_name %}
-    <div><button class="names" name='action' value={{member}}>{{member}}</button></div>
+    <div><button type="button" id ={{member}} onClick="change_chat(this.id)" class="names" name='action' value={{member}}>{{member}}</button></div>
     {% endfor %}
   </div>
 </div>
-      <button type="submit" title='logout' class="button2 px-2 py-1 rounded" name ='action' value="logout">
+      <button type="button" onclick="logout()" title='logout' class="button2 px-2 py-1 rounded" name ='action' value="logout">
   	<i class='fas fa-sign-out-alt'></i></button>
   </form>
             
         </div>
         <form method="post" action='/chat/{{var}}'>
-          <div class="messages-box">
+          <div id="allchats" class="messages-box">
             <div class="list-group rounded-0">
               {%for chat in user_chats %}
               {% if current_chat!=''and chat[0]==current_chat %}
-              <button name='action1' value={{chat[0]}} class=" chats1 px-4 py-2 light rounded-0">
+              <button type="button" onClick="change_chat(this.value)" name='action1' value={{chat[0]}} class=" chats1 px-4 py-2 light rounded-0">
               {%else%}
-              <button name='action1' value={{chat[0]}} class=" chats px-4 py-2 light rounded-0">
+              <button type="button" onClick="change_chat(this.value)" name='action1' value={{chat[0]}} class=" chats px-4 py-2 light rounded-0">
               {%endif%}
                 <div class="media"><i class="icon fas fa-user"></i>
                   <div class="media-body ml-4">
@@ -322,51 +447,17 @@ function filterFunction() {
       
     </div>
     
-    <div class="column col-8 px-0">
-          <div class="search1 px-4 py-2">
-            {%if current_chat!='' %}
-            <p class="txt mb-0 py-1"><i class="px-2 fas fa-user"></i>   {{current_chat}}
-          </p>
-            {%else%}<p class="txt mb-0 px-3 py-1">Welcome {{var}}</p>{%endif%}
+    <div id="right" class="column col-8 px-0">
+          <div id="curr_chat" class="search1 px-4 py-2">
+            <p class="txt mb-0 px-3 py-1">Welcome {{var}}</p>
         </div>
       <!-- Chat Box-->
-      <div class="px-4 py-2 chatbox ">
-        <!-- Sender Message-->
-        {%if current_chat!='' %}
-        {%for chat in chats%}
-        {%if chat[0] == var %}
-        <div class="right media  ml-auto mb-3">
-          <div class="media-body mr-4">
-            <div class="reciever bg-light py-2 px-3 mb-2">
-              <p class="chat-txt text-small mb-0 ">{{chat[1]}}</p>
-            </div>
-            <p class="chat-txt small text-muted text-right">{{chat[2]}} | {{chat[3]}}</p>
-          </div>
-        </div>
-        {%else%}
-        <div class="left media mr-auto mb-3"><i class="icon1 fas fa-user"></i>
-          <div class="media-body ml-3">
-            <div class="sender py-2 px-3 mb-2">
-              <p class="chat-txt text-small mb-0 text-white">{{chat[1]}}</p>
-            </div>
-            <p class="chat-txt small text-muted text-left">{{chat[2]}} | {{chat[3]}}</p>
-          </div>
-        </div>
-        {%endif%}
-        {% endfor %}
-        
+      <div id ="chatbox" class="px-4 py-2 chatbox ">
       </div>
       <!-- Typing area -->
-      <form method="post" action='/chat/{{var}}'>
-        <div class="message input-group" >
-          <input type="text" autocomplete="off" name='sent-msg' placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-3 bg-light" required>
-          <div class="input-group-append">
-            <button id="button-addon2" name='sent-msg' type="submit" class="button msg-button"> <i class="fa fa-paper-plane px-2"></i></button>
-          </div>
-        </div>
+      <form id ="msgbox"method="post" action="/chat/{{var}}">
       </form>
       
-      {%endif%}
     </div>
 </div>
 
