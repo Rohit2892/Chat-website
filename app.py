@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil.tz import gettz
 from flask_socketio import SocketIO, join_room, close_room
 from db import chat_history, get_user, new_msg, new_user, get_allusers,get_chats
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -107,4 +108,4 @@ def handle_my_custom_event(data):
     close_room(user)
 
 if __name__=="__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, port=int(os.environ.get('PORT', 5000)))
