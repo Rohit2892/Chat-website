@@ -15,7 +15,7 @@ login_manager=LoginManager()
 login_manager.login_view='login'
 login_manager.init_app(app)
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET','POST'])
 def login():
     message=""
     if current_user.is_authenticated:
@@ -31,7 +31,7 @@ def login():
             message="User credentials are incorrect"
     return render_template("login.html", message=message)
 
-@app.route('/signup', methods=['POST'])
+@app.route('/signup', methods=['GET','POST'])
 def signup():
     message=""
     if request.method == 'POST':
@@ -48,7 +48,7 @@ def signup():
                 message="User already exists"
     return render_template("signup.html", message=message)
 
-@app.route('/chat/<user>', methods=['POST'])
+@app.route('/chat/<user>', methods=['GET','POST'])
 @login_required
 def chat(user):
     user_chats=get_chats(user)
