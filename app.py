@@ -13,9 +13,9 @@ socketio = SocketIO(app)
 app.secret_key='secret key'
 login_manager=LoginManager()
 login_manager.login_view='login'
-login_manager.init_app(app)
+login_manager.init_app(app,transports= ['websocket'])
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/', methods=['POST'])
 def login():
     message=""
     if current_user.is_authenticated:
@@ -31,7 +31,7 @@ def login():
             message="User credentials are incorrect"
     return render_template("login.html", message=message)
 
-@app.route('/signup', methods=['GET','POST'])
+@app.route('/signup', methods=['POST'])
 def signup():
     message=""
     if request.method == 'POST':
@@ -48,7 +48,7 @@ def signup():
                 message="User already exists"
     return render_template("signup.html", message=message)
 
-@app.route('/chat/<user>', methods=['GET','POST'])
+@app.route('/chat/<user>', methods=['POST'])
 @login_required
 def chat(user):
     user_chats=get_chats(user)
