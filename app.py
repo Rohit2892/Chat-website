@@ -9,11 +9,11 @@ from db import chat_history, get_user, new_msg, new_user, get_allusers,get_chats
 import os
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app,transports= ['websocket'])
 app.secret_key='secret key'
 login_manager=LoginManager()
 login_manager.login_view='login'
-login_manager.init_app(app,transports= ['websocket'])
+login_manager.init_app(app)
 
 @app.route('/', methods=['POST'])
 def login():
